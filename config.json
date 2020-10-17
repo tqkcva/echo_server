@@ -1,0 +1,21 @@
+{
+	"name": "echo server",
+	"tcp":
+	{
+		"port": 3054,
+		"secure": false,
+		"ca_file": "",
+		"cert": "",
+		"pri_key": "",
+		"timeout": 30000
+	},
+	"udp":
+	{
+		"port": 3053,
+		"secure": false,
+		"ca_file": "",
+		"cert": "",
+		"pri_key": "",
+		"timeout": 30000
+	}
+}
