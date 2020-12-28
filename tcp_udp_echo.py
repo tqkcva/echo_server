@@ -7,6 +7,7 @@ import _thread
 import time
 import signal
 import queue
+import traceback
 
 __config = None
 __active_threads = queue.LifoQueue()
@@ -21,7 +22,17 @@ def _load_config(filename="config.json"):
         print("Failed to load configuration files")
     pass
 
-def _client_service(conn, addr):
+def _tcp_client_service(conn, addr):
+    print('Connected by', addr)
+    with conn:
+        while True:
+            data = conn.recv(1024)
+            if not data: break
+            conn.send(data)
+    print("Goodbye ", addr)
+    pass
+
+def _udp_client_service(conn, addr):
     print('Connected by', addr)
     with conn:
         while True:
@@ -32,7 +43,6 @@ def _client_service(conn, addr):
     pass
 
 def _listener(af, socktype, proto, sa):
-    s = None
     try:
         s = None
         s = socket.socket(af, socktype, proto)
@@ -46,10 +56,17 @@ def _listener(af, socktype, proto, sa):
                     print("Start service for")
                     print(s)
                     conn, addr = s.accept()
-                    __active_threads.put(_thread.start_new_thread(_client_service, (conn, addr,)))
+                    if socktype == socket.SOCK_STREAM:
+                        __active_threads.put(_thread.start_new_thread(_tcp_client_service, (conn, addr,)))
+                    elif socktype == socket.SOCK_DGRAM:
+                        __active_threads.put(_thread.start_new_thread(_udp_client_service, (conn, addr,)))
+                    else:
+                        print("Unknown socket type")
             except OSError as err:
+                traceback.print_exc()
                 print(err)
     except OSError as err:
+        traceback.print_exc()
         if s != None:
             s.close()
         print(err)
